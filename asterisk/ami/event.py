@@ -13,6 +13,11 @@ else:
     bytes = str
     basestring = basestring
 
+try:
+    PatternType = re._pattern_type
+except AttributeError:
+    PatternType = re.Pattern
+
 
 class Event(object):
     match_regex = re.compile('^Event: .*', re.IGNORECASE)
@@ -86,8 +91,8 @@ class KeyValueParser(EventKeyParser):
 
 class EventListener(object):
     def __init__(self, on_event=None, white_list=None, black_list=[], **kwargs):
-        self.white_list = [white_list] if isinstance(white_list, (basestring, re._pattern_type)) else white_list
-        self.black_list = [black_list] if isinstance(black_list, (basestring, re._pattern_type)) else black_list
+        self.white_list = [white_list] if isinstance(white_list, (basestring, PatternType)) else white_list
+        self.black_list = [black_list] if isinstance(black_list, (basestring, PatternType)) else black_list
         for k in list(kwargs.keys()):
             if k.startswith('on_'):
                 setattr(self, k, kwargs.pop(k))
@@ -103,7 +108,7 @@ class EventListener(object):
         for rule in self.white_list:
             if isinstance(rule, basestring) and event_name == rule:
                 return True
-            if isinstance(rule, re._pattern_type) and rule.search(event_name) is not None:
+            if isinstance(rule, PatternType) and rule.search(event_name) is not None:
                 return True
         return False
 
@@ -111,17 +116,17 @@ class EventListener(object):
         for rule in self.black_list:
             if isinstance(rule, basestring) and event_name == rule:
                 return False
-            if isinstance(rule, re._pattern_type) and rule.match(event_name) is not None:
+            if isinstance(rule, PatternType) and rule.match(event_name) is not None:
                 return False
         return True
 
     def check_attribute(self, rules, value):
-        if isinstance(rules, (re._pattern_type, basestring)):
+        if isinstance(rules, (PatternType, basestring)):
             rules = [rules]
         for rule in rules:
             if isinstance(rule, basestring) and rule == value:
                 return True
-            if isinstance(rule, re._pattern_type) and rule.search(value):
+            if isinstance(rule, PatternType) and rule.search(value):
                 return True
         return False
 
